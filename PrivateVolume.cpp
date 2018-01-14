@@ -106,7 +106,7 @@ status_t PrivateVolume::doMount() {
     }
 
     if (mFsType == "ext4") {
-        int res = ext4::Check(mDmDevPath, mPath);
+        int res = ext4::Check(mDmDevPath, mPath, true);
         if (res == 0 || res == 1) {
             LOG(DEBUG) << getId() << " passed filesystem check";
         } else {
@@ -120,7 +120,7 @@ status_t PrivateVolume::doMount() {
         }
 
     } else if (mFsType == "f2fs") {
-        int res = f2fs::Check(mDmDevPath);
+        int res = f2fs::Check(mDmDevPath, true);
         if (res == 0) {
             LOG(DEBUG) << getId() << " passed filesystem check";
         } else {
@@ -128,7 +128,7 @@ status_t PrivateVolume::doMount() {
             return -EIO;
         }
 
-        if (f2fs::Mount(mDmDevPath, mPath)) {
+        if (f2fs::Mount(mDmDevPath, mPath, "")) {
             PLOG(ERROR) << getId() << " failed to mount";
             return -EIO;
         }
@@ -163,7 +163,7 @@ status_t PrivateVolume::doMount() {
     return OK;
 }
 
-status_t PrivateVolume::doUnmount() {
+status_t PrivateVolume::doUnmount(bool detach /* = false */) {
     ForceUnmount(mPath);
 
     if (TEMP_FAILURE_RETRY(rmdir(mPath.c_str()))) {

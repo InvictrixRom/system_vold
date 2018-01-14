@@ -36,7 +36,7 @@
 #include <linux/kdev_t.h>
 
 #define LOG_TAG "Vold"
-
+#include <private/android_filesystem_config.h>
 #include <android-base/logging.h>
 #include <android-base/properties.h>
 #include <android-base/stringprintf.h>
@@ -56,9 +56,15 @@ namespace android {
 namespace vold {
 namespace ext4 {
 
+#ifdef MINIVOLD
+static const char* kResizefsPath = "/sbin/resize2fs";
+static const char* kMkfsPath = "/sbin/mke2fs";
+static const char* kFsckPath = "/sbin/e2fsck";
+#else
 static const char* kResizefsPath = "/system/bin/resize2fs";
 static const char* kMkfsPath = "/system/bin/mke2fs";
 static const char* kFsckPath = "/system/bin/e2fsck";
+#endif
 
 bool IsSupported() {
     return access(kMkfsPath, X_OK) == 0
@@ -66,7 +72,7 @@ bool IsSupported() {
             && IsFilesystemSupported("ext4");
 }
 
-status_t Check(const std::string& source, const std::string& target) {
+status_t Check(const std::string& source, const std::string& target, bool trusted) {
     // The following is shamelessly borrowed from fs_mgr.c, so it should be
     // kept in sync with any changes over there.
 
@@ -121,20 +127,28 @@ status_t Check(const std::string& source, const std::string& target) {
         cmd.push_back("-y");
         cmd.push_back(c_source);
 
-        // ext4 devices are currently always trusted
-        return ForkExecvp(cmd, sFsckContext);
+        return ForkExecvp(cmd, trusted ? sFsckContext : sFsckUntrustedContext);
     }
 
     return 0;
 }
 
 status_t Mount(const std::string& source, const std::string& target, bool ro,
-        bool remount, bool executable) {
+        bool remount, bool executable, const std::string& opts /* = "" */, bool portable) {
     int rc;
     unsigned long flags;
 
+    std::string data(opts);
+
+    if (portable) {
+        if (!data.empty()) {
+            data += ",";
+        }
+        data += "context=u:object_r:sdcard_posix:s0";
+    }
     const char* c_source = source.c_str();
     const char* c_target = target.c_str();
+    const char* c_data = data.c_str();
 
     flags = MS_NOATIME | MS_NODEV | MS_NOSUID | MS_DIRSYNC;
 
@@ -142,12 +156,16 @@ status_t Mount(const std::string& source, const std::string& target, bool ro,
     flags |= (ro ? MS_RDONLY : 0);
     flags |= (remount ? MS_REMOUNT : 0);
 
-    rc = mount(c_source, c_target, "ext4", flags, NULL);
+    rc = mount(c_source, c_target, "ext4", flags, c_data);
+    if (portable && rc == 0) {
+        chown(c_target, AID_MEDIA_RW, AID_MEDIA_RW);
+        chmod(c_target, 0755);
+    }
 
     if (rc && errno == EROFS) {
         SLOGE("%s appears to be a read only filesystem - retrying mount RO", c_source);
         flags |= MS_RDONLY;
-        rc = mount(c_source, c_target, "ext4", flags, NULL);
+        rc = mount(c_source, c_target, "ext4", flags, c_data);
     }
 
     return rc;

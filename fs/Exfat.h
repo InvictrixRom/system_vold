@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_VOLD_F2FS_H
-#define ANDROID_VOLD_F2FS_H
+#ifndef ANDROID_VOLD_EXFAT_H
+#define ANDROID_VOLD_EXFAT_H
 
 #include <utils/Errors.h>
 
@@ -23,15 +23,16 @@
 
 namespace android {
 namespace vold {
-namespace f2fs {
+namespace exfat {
 
 bool IsSupported();
 
-status_t Check(const std::string& source, bool trusted);
-status_t Mount(const std::string& source, const std::string& target, const std::string& opts = "", bool portable = false);
+status_t Check(const std::string& source);
+status_t Mount(const std::string& source, const std::string& target, bool ro,
+        bool remount, bool executable, int ownerUid, int ownerGid, int permMask);
 status_t Format(const std::string& source);
 
-}  // namespace f2fs
+}  // namespace exfat
 }  // namespace vold
 }  // namespace android
 

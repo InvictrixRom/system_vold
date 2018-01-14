@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 The Android Open Source Project
+ * Copyright (C) 2015 The CyanogenMod Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,25 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_VOLD_F2FS_H
-#define ANDROID_VOLD_F2FS_H
+#include "vold.h"
 
-#include <utils/Errors.h>
-
-#include <string>
-
-namespace android {
-namespace vold {
-namespace f2fs {
-
-bool IsSupported();
-
-status_t Check(const std::string& source, bool trusted);
-status_t Mount(const std::string& source, const std::string& target, const std::string& opts = "", bool portable = false);
-status_t Format(const std::string& source);
-
-}  // namespace f2fs
-}  // namespace vold
-}  // namespace android
-
-#endif
+int main(int argc, char **argv) {
+    return vold_main(argc, argv);
+}

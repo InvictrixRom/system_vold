@@ -25,6 +25,23 @@
 #include <string>
 #include <utility>
 
+#ifdef MINIVOLD
+
+namespace android {
+namespace vold {
+
+class Keymaster {
+  public:
+    Keymaster() {}
+  private:
+    DISALLOW_COPY_AND_ASSIGN(Keymaster);
+};
+
+}
+}
+
+#else
+
 #include <android/hardware/keymaster/3.0/IKeymasterDevice.h>
 #include <android-base/macros.h>
 #include <keystore/authorization_set.h>
@@ -127,6 +144,8 @@ class Keymaster {
 }  // namespace vold
 }  // namespace android
 
+#endif // MINIVOLD
+
 #endif // __cplusplus
 
 
@@ -154,7 +173,10 @@ int keymaster_sign_object_for_cryptfs_scrypt(const uint8_t* key_blob,
                                              const uint8_t* object,
                                              const size_t object_size,
                                              uint8_t** signature_buffer,
-                                             size_t* signature_buffer_size);
+                                             size_t* signature_buffer_size,
+                                             uint8_t* key_buffer,
+                                             uint32_t key_buffer_size,
+                                             uint32_t* key_out_size);
 
 __END_DECLS
 

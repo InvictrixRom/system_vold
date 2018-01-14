@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef ANDROID_VOLD_F2FS_H
-#define ANDROID_VOLD_F2FS_H
+#ifndef ANDROID_VOLD_NTFS_H
+#define ANDROID_VOLD_NTFS_H
 
 #include <utils/Errors.h>
 
@@ -23,15 +23,17 @@
 
 namespace android {
 namespace vold {
-namespace f2fs {
+namespace ntfs {
 
 bool IsSupported();
 
-status_t Check(const std::string& source, bool trusted);
-status_t Mount(const std::string& source, const std::string& target, const std::string& opts = "", bool portable = false);
-status_t Format(const std::string& source);
+status_t Check(const std::string& source);
+status_t Mount(const std::string& source, const std::string& target, bool ro,
+        bool remount, bool executable, int ownerUid, int ownerGid, int permMask,
+        bool createLost);
+status_t Format(const std::string& source, bool wipe);
 
-}  // namespace f2fs
+}  // namespace ntfs
 }  // namespace vold
 }  // namespace android
 
